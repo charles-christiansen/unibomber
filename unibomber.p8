@@ -3,13 +3,20 @@ version 36
 __lua__
 -- game loop
 function _init()
+	if not cdcalled then
+		cartdata("unib")
+	end
+	--dset(0,0)
+	cdcalled=true
+	highscore=max(dget(0),0)
+	newhs=false
 	palt(0,false)
 	palt(15,true)
 	cycle={s=3,x=10,y=15,r=5,l=0,fh=false,fv=false}
  bomb={x=0,y=0,s=1}
  parts={}
  tanks={}
-	tanktrashtalk={"get him boys!","time to die!","fire!","die, son!","daddy's home","eat lead!","game over man!"}
+	tanktrashtalk={"get him boys!","time to die!","fire!","die, son!","daddy's home","eat lead!","game over man!","gonna getcha!","yeeeehaw!"}
  missiles={}
  spawn_tank()
  score=0
@@ -20,12 +27,11 @@ function _init()
 	titlecardlettery=cycle.y+34
 	newgamecol=0
 	newgameblink=1
-	gameovertext={"dude, ouch!","uni-bummer!","gotta hurt!","yikes dawg!","make it rain"}
+	gameovertext={"dude, ouch!","uni-bummer!","gotta hurt!","yikes dawg!","u blow'd up"}
 	gameovertextidx=1
 	gameoversprites={}
 	gameoverexp=false
 	gameovercount=0
-	-- music(0)
  _update60=update_start
  _draw=draw_start
 end
@@ -35,13 +41,13 @@ function update_start()
 		music(0)
 		musicplayed=true
 	end
-	if titlecardlettery == 84 and titlecardindex <= #titlecardletters then
+	if titlecardlettery == 64 and titlecardindex <= #titlecardletters then
 		titlecard=titlecard..titlecardletters[titlecardindex]
 		titlecardindex+=1
 		titlecardlettery=cycle.y+34
 		titlecardletterx=cycle.x+8
 	elseif titlecardindex <= #titlecardletters then
-		titlecardlettery+=1
+		titlecardlettery+=0.5
 	end
 	cycle.x+=0.27
 	if cycle.x >= 96 then
@@ -73,6 +79,10 @@ function update_game_over()
 		cycle_go_boom()
 		gameoverexp=true
 		gameovertextidx=flr(rnd(#gameovertext))+1
+	end
+	if score > highscore then
+		newhs=true
+		dset(0,score)
 	end
 	for cyclebit in all(gameoversprites) do
 			if cyclebit.y < 120 then
@@ -148,10 +158,13 @@ function draw_start()
 	if titlecardindex <= #titlecardletters then
 		print("\^p "..titlecardletters[titlecardindex],titlecardletterx,titlecardlettery,0)
 	else
-		print("\^w by @2bitchuck",10,104,0)
-		print("\^w ❎/🅾️ start",10,114,newgamecol)
+		print("\^w by @2bitchuck",5,84,0)
+		print("\^w ❎/🅾️ start",5,94,newgamecol)
+		if highscore > 0 then
+			print("\^w high score:"..highscore,5,114,0)
+		end
 	end
-	print("\^p "..titlecard,10,84,0)
+	print("\^p "..titlecard,5,64,0)
 end
 
 function draw_game_over()
@@ -162,8 +175,15 @@ function draw_game_over()
 		spr(gameoversprites[i].spr,gameoversprites[i].x,gameoversprites[i].y,1,1,gameoversprites[i].hf,gameoversprites[i].vf)
 	end
 	if gameovercount > 180 then
-		print("\^w "..gameovertext[gameovertextidx],13,94,0)
-		print("\^w ❎/🅾️ again",13,104,newgamecol)
+		local gotxt=newhs and "★"..score.."★ bombed!" or gameovertext[gameovertextidx]
+		local gotxtpos=newhs and 1 or 10
+		local gotxty=newhs and 84 or 94
+		print("\^w "..gotxt,gotxtpos+2,gotxty,0)
+		if newhs then
+			print("\^w new high score!",gotxtpos,gotxty+10,0)
+			gotxty+=10
+		end
+		print("\^w ❎/🅾️ again",10,gotxty+10,newgamecol)
 	end
 	draw_particles()
 end
@@ -391,11 +411,6 @@ function tank_fire(t)
 	add(missiles,m)
 	missile_fire(m)
 end
--->8
---todo
---[[
-- better collision detection
-]]
 __gfx__
 00000000ffffffffffffffffffffffffffffff000fffffffffffffffffffffffffffff000fffffffffffffffffffffffffffffffffffffffffffffff00000000
 00000000fffffffffffffffffffffffffffff0fff0fffffffffffffffffffffffffff0fff0ffffffffffffffffffff00ffffffffffffff00ffffffff00000000
